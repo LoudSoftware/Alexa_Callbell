@@ -1,0 +1,6 @@
+ProductID = "RPi"
+Security_Profile_Description = "RPi"
+Security_Profile_ID = "amzn1.application.69****************e"
+Client_ID = "amzn1.application-oa2-client.35*******************************7"
+Client_Secret = "ba00**************************************************************c59c"
+refresh_token = ""
