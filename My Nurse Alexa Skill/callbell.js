@@ -6,7 +6,7 @@
 
 // Needed for Amazon SNS and IOT services
 var AWS = require('aws-sdk');
-var iotdata = new AWS.IotData({endpoint: 'https://A************I.iot.us-east-1.amazonaws.com'}); //Add your IOT Endpoint here
+// var iotdata = new AWS.IotData({endpoint: 'https://A************I.iot.us-east-1.amazonaws.com'}); //Add your IOT Endpoint here
 
 // Route the incoming request based on type (LaunchRequest, IntentRequest, etc.) 
 // The JSON body of the request is provided in the event parameter.
@@ -18,7 +18,7 @@ exports.handler = function (event, context) {
          * Uncomment this if statement and populate with your skill's application ID to
          * prevent someone else from configuring a skill that sends requests to this function.
          */
-        if (event.session.application.applicationId !== "amzn1.echo-sdk-ams.app.ad8***********************") {
+        if (event.session.application.applicationId !== "amzn1.ask.skill.b681c25c-554d-4ae9-a1d4-2e0c6f03d626") {
             context.fail("Invalid Application ID");
         }
         
@@ -75,9 +75,10 @@ function onIntent(intentRequest, session, callback) {
         comfortintent(intent, session, callback);
     } else if ("nurseintent" === intentName) {
         nurseintent(intent, session, callback);
-    } else if ("codeintent" === intentName) {
+    } /*else if ("codeintent" === intentName) {
         codeintent(intent, session, callback);
-    } else if ("painintent" === intentName) {
+        
+}*/ else if ("painintent" === intentName) {
         painintent(intent, session, callback);    
     } else if ("bedintent" === intentName) {
         bedintent(intent, session, callback);    
@@ -168,7 +169,7 @@ function codeCMD(codes, callback) {
     //Sends message to Amazon SNS
     sns.publish({
         Message: 'A ' + codes + ' is being called in room 124B',
-        TopicArn: 'arn:aws:sns:us-east-1:1890******0:Staff' //Add your SNS ARN here
+        TopicArn: 'arn:aws:sns:us-east-1:110522202475:nurse' //Add your SNS ARN here
     }, function(err, data) {
         if (err) {
             console.log(err.stack); //an error occured
@@ -176,20 +177,8 @@ function codeCMD(codes, callback) {
         }
         console.log('push sent');//message sent
         console.log(data);  
-    });//Logs if your SNS message was sent. 
-    
-    //Sends Message to AWS IOT Shadow
-    console.log("Calling IOTData ...");
-    iotdata.publish(params, function(err, data) {
-        if (err) {   // an error occurred
-            console.log(err, err.stack);
-            callback("Error when sending command to the CHIP");
-        }
-        else {  // successful response
-            console.log(data);
-            callback(""); //Executed
-        }    
-    });// Logs if your IOT message was sent. 
+        callback("");
+    });//Logs if your SNS message was sent.. 
 }
 
 /**
@@ -226,28 +215,16 @@ function bedCMD(callback) {
     //Sends message to Amazon SNS
     sns.publish({
         Message: 'Bed alarm room 124B',
-        TopicArn: 'arn:aws:sns:us-east-1:189*********0:Staff' //Add your SNS ARN here
+        TopicArn: 'arn:aws:sns:us-east-1:110522202475:nurse' //Add your SNS ARN here
     }, function(err, data) {
         if (err) {
             console.log(err.stack); //an error occured
             callback("Error when sending message");
         }
         console.log('push sent'); //message sent
-        console.log(data);  
+        console.log(data);
+        callback(""); 
     }); //Logs if your SNS message was sent.
-
-    //Sends Message to AWS IOT Shadow
-    console.log("Calling IOTData ...");
-    iotdata.publish(params, function(err, data) {
-        if (err) {   // an error occurred
-            console.log(err, err.stack);
-            callback("Error when sending command to the CHIP");
-        }
-        else {  // successful response
-            console.log(data);
-            callback(""); //Executed
-        }    
-    });
 }
 
 /**
@@ -295,7 +272,7 @@ function bathroomCMD(bathroom, callback) {
     //Sends message to Amazon SNS
     sns.publish({
         Message: 'Bathroom Assistance is needed in room 124B',
-        TopicArn: 'arn:aws:sns:us-east-1:1890*******0:NA' //Add your SNS ARN here
+        TopicArn: 'arn:aws:sns:us-east-1:110522202475:nurse' //Add your SNS ARN here
     }, function(err, data) {
         if (err) {
             console.log(err.stack); //an error occured
@@ -303,20 +280,8 @@ function bathroomCMD(bathroom, callback) {
         }
         console.log('push sent'); //message sent
         console.log(data);
+        callback("");
     }); //Logs if your SNS message was sent.
-
-    //Sends Message to AWS IOT Shadow
-    console.log("Calling IOTData ...");
-    iotdata.publish(params, function(err, data) {
-        if (err) {   // an error occurred
-            console.log(err, err.stack);
-            callback("Error when sending command to the CHIP");
-        }
-        else {  // successful response
-            console.log(data);
-            callback(""); //Executed
-        }    
-    }); //Logs if your IOT message was sent.
 }
 
 /**
@@ -363,7 +328,7 @@ function painCMD(pain, callback) {
     //Sends message to Amazon SNS
     sns.publish({
         Message: 'Room 124B is requesting ' + pain,
-        TopicArn: 'arn:aws:sns:us-east-1:1890*******0:Nurse' //Add your SNS ARN here
+        TopicArn: 'arn:aws:sns:us-east-1:110522202475:nurse' //Add your SNS ARN here
     }, function(err, data) {
         if (err) {
             console.log(err.stack); //an error occured
@@ -373,19 +338,6 @@ function painCMD(pain, callback) {
         console.log(data);
         callback("");  
     }); //Logs if your SNS message was sent.
-    
-    //Sends Message to AWS IOT Shadow
-    console.log("Calling IOTData ...");
-    iotdata.publish(params, function(err, data) {
-        if (err) {   // an error occurred
-            console.log(err, err.stack);
-            callback("Error when sending command to the CHIP");
-        }
-        else {  // successful response
-            console.log(data);
-            callback(""); //Executed
-        }    
-    });
 }
 
 /**
@@ -426,7 +378,7 @@ function comfortCMD(comfort, callback) {
     //Sends message to Amazon SNS
     sns.publish({
         Message: 'Room 124B requires a ' + comfort,
-        TopicArn: 'arn:aws:sns:us-east-1:1890******0:Staff' //Add your SNS ARN here
+        TopicArn: 'arn:aws:sns:us-east-1:110522202475:nurse' //Add your SNS ARN here
     }, function(err, data) {
         if (err) {
             console.log(err.stack); //an error occured 
