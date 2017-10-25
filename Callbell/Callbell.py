@@ -4,7 +4,6 @@ import time
 import RPi.GPIO as GPIO
 import alsaaudio
 import wave
-import random
 from creds import * #imports from creds file
 import requests
 import json
@@ -13,7 +12,6 @@ from memcache import Client
 
 #Settings for the GPIO of the Raspberry Pi
 button = 18 #GPIO Pin the callbell button
-alarm = 23 # GPIO Pin for the bed alarm trigger
 lights = [24, 25] # GPIO Pins with LED's conneted
 device = "plughw:1" # Name of your microphone/soundcard in arecord -L
 
@@ -99,63 +97,10 @@ def alexa(): #This is called when the call button is pressed and wav recording i
 			time.sleep(.2)
 			GPIO.output(lights, GPIO.LOW)
 
-def bedalarm(): #This is called when the bed alarm triggered a prerecorded wav file is sent to AVS.
-	GPIO.output(24, GPIO.HIGH)
-	url = 'https://access-alexa-na.amazon.com/v1/avs/speechrecognizer/recognize'
-	headers = {'Authorization' : 'Bearer %s' % gettoken()}
-	d = {
-   		"messageHeader": {
-       		"deviceContext": [
-           		{
-               		"name": "playbackState",
-               		"namespace": "AudioPlayer",
-               		"payload": {
-                   		"streamId": "",
-        			   	"offsetInMilliseconds": "0",
-                   		"playerActivity": "IDLE"
-               		}
-           		}
-       		]
-		},
-   		"messageBody": {
-       		"profile": "alexa-close-talk",
-       		"locale": "en-us",
-       		"format": "audio/L16; rate=16000; channels=1"
-   		}
-	}
-	with open(path+'bedalarm.wav') as inf:
-		files = [
-				('file', ('request', json.dumps(d), 'application/json; charset=UTF-8')),
-				('file', ('audio', inf, 'audio/L16; rate=16000; channels=1'))
-				]	
-		r = requests.post(url, headers=headers, files=files)
-	if r.status_code == 200:
-		for v in r.headers['content-type'].split(";"):
-			if re.match('.*boundary.*', v):
-				boundary =  v.split("=")[1]
-		data = r.content.split(boundary)
-		for d in data:
-			if (len(d) >= 1024):
-				audio = d.split('\r\n\r\n')[1].rstrip('--')
-		with open(path+"response.mp3", 'wb') as f:
-			f.write(audio)
-		GPIO.output(25, GPIO.LOW)
-		os.system('mpg123 -q -a hw:2,0 {}response.mp3 {}1sec.mp3'.format(path, path))
-		GPIO.output(24, GPIO.LOW)
-	else:
-		GPIO.output(lights, GPIO.LOW)
-		for x in range(0, 3):
-			time.sleep(.2)
-			GPIO.output(25, GPIO.HIGH)
-			time.sleep(.2)
-			GPIO.output(lights, GPIO.LOW)		
-
 def start(): #Loop that is listening for callbell button press or bed alarm trigger
 	last = GPIO.input(button)
-	alrmls = GPIO.input(alarm)
 	while True:
 		val = GPIO.input(button)
-		alrm = GPIO.input(alarm)
 		if val != last: # looks for call bell trigger
 			last = val
 			if val == 1 and recorded == True:
@@ -179,18 +124,13 @@ def start(): #Loop that is listening for callbell button press or bed alarm trig
 		elif val == 0:
 			l, data = inp.read()
 			if l:
-				audio += data
-		elif alrm != alrmls: #looks for bed alarm trigger
-			alrmls = alrm
-			if alrm == 0:
-				bedalarm()			
+				audio += data		
 	
 if __name__ == "__main__":
 	GPIO.setwarnings(False)
 	GPIO.cleanup()
 	GPIO.setmode(GPIO.BCM)
 	GPIO.setup(button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-	GPIO.setup(alarm, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 	GPIO.setup(lights, GPIO.OUT)
 	GPIO.output(lights, GPIO.LOW)
 	while internet_on() == False:
