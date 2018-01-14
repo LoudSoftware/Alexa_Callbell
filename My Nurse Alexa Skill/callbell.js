@@ -1,4 +1,3 @@
-
 /**
  * This Amazon Alexa skill is used with the Callbell skill. This skill is controlled by a C.H.I.P or Raspberry Pi and is triggered by 
  * pre-recorded wav file that is played to the Alexa Skill Service. The response is then used to played over the floor or hospital loudspeaker
@@ -7,6 +6,9 @@
 // Needed for Amazon SNS and IOT services
 var AWS = require('aws-sdk');
 // var iotdata = new AWS.IotData({endpoint: 'https://A************I.iot.us-east-1.amazonaws.com'}); //Add your IOT Endpoint here
+
+var roomID = process.env.roomID;
+var skillID = "amzn1.ask.skill.b681c25c-554d-4ae9-a1d4-2e0c6f03d626";
 
 // Route the incoming request based on type (LaunchRequest, IntentRequest, etc.) 
 // The JSON body of the request is provided in the event parameter.
@@ -18,7 +20,7 @@ exports.handler = function (event, context) {
          * Uncomment this if statement and populate with your skill's application ID to
          * prevent someone else from configuring a skill that sends requests to this function.
          */
-        if (event.session.application.applicationId !== "amzn1.ask.skill.b681c25c-554d-4ae9-a1d4-2e0c6f03d626") {
+        if (event.session.application.applicationId !== skillID) {
             context.fail("Invalid Application ID");
         }
         
@@ -271,7 +273,7 @@ function bathroomCMD(bathroom, callback) {
 
     //Sends message to Amazon SNS
     sns.publish({
-        Message: 'Bathroom Assistance is needed in room 124B',
+        Message: 'Bathroom Assistance is needed in room ' + roomID,
         TopicArn: 'arn:aws:sns:us-east-1:110522202475:nurse' //Add your SNS ARN here
     }, function(err, data) {
         if (err) {
